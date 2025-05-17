@@ -15,10 +15,14 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ticketing.domain.User;
-import com.ticketing.dto.NewUserDTO;
+import com.ticketing.dto.UserDTO;
 import com.ticketing.service.UserService;
 
 import java.util.List;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/api/admin/users/resetPassword")
@@ -27,11 +31,14 @@ public class ResetPasswordController {
 
     @Autowired
     private UserService userService;
+    
+    private static final Logger logger = LoggerFactory.getLogger(ResetPasswordController.class);
+    
 
     @GetMapping("/find")
     public String showFindUsersForm(Model model) {
-        model.addAttribute("departments", userService.getAllDepartments()); // Fetch all departments
-        model.addAttribute("projects", userService.getAllProjects());       // Fetch all projects
+        model.addAttribute("departments", userService.findAll()); // Fetch all departments
+        model.addAttribute("projects", userService.findAll());       // Fetch all projects
         return "findUser"; 
     }
     
@@ -58,18 +65,18 @@ public class ResetPasswordController {
     }
     
     @PostMapping("/save")
-    public String updatePassword(@ModelAttribute NewUserDTO userUpdateRequest, RedirectAttributes redirectAttributes) {
+    public String updatePassword(@ModelAttribute UserDTO userUpdateRequest, RedirectAttributes redirectAttributes) {
         try {
             // Ensure the user ID is provided for updating
-            if (userUpdateRequest.getId() == null) {
+            if (userUpdateRequest.getUserId() == null) {
                 redirectAttributes.addFlashAttribute("error", "User ID is required for updating the password.");
-                return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getId(); // Redirect back to the frontend
+                return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getUserId(); // Redirect back to the frontend
             }
 
             // Ensure a new password is provided
             if (userUpdateRequest.getPassword() == null || userUpdateRequest.getPassword().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "New password is required.");
-                return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getId(); // Redirect back to the frontend
+                return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getUserId(); // Redirect back to the frontend
             }
 
 //            // Implement later
@@ -79,8 +86,8 @@ public class ResetPasswordController {
 //                return "redirect:http://localhost:8181/resetPassword?id=" + userUpdateRequest.getId(); // Redirect back to the frontend
 //            }
             
-            User user = userService.findById(userUpdateRequest.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userUpdateRequest.getId()));
+            User user = userService.findById(userUpdateRequest.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userUpdateRequest.getUserId()));
 
             // Encode the new password
             user.setUserPassword(new BCryptPasswordEncoder().encode(userUpdateRequest.getPassword()));
@@ -93,7 +100,7 @@ public class ResetPasswordController {
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error updating password: " + e.getMessage());
-            return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getId(); // Redirect back to the frontend
+            return "redirect:http://localhost:8181/resetPassword/resetPassword?id=" + userUpdateRequest.getUserId(); // Redirect back to the frontend
         }
     }
 

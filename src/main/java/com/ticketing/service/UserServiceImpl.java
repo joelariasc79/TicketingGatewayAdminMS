@@ -49,6 +49,15 @@ public class UserServiceImpl implements UserService {
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
+    
+//    public Long getUserIdByUsername(String username) {
+//        Optional<User> user = userRepository.findByUserName(username); // Assumes you have this method in your UserRepository
+//        if (user.isPresent()) {
+//            return user.get().getUserId(); //  Assuming your User class has a getUserId() method.
+//        } else {
+//            return null; // Or throw an exception, or handle the absence of the user as appropriate
+//        }
+//    }
 
     @Override
     public List<User> findAll() {
@@ -70,15 +79,15 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUserName(userName);
     }
     
- // Method to get all departments
-    public List<Department> getAllDepartments() {
-        return departmentRepository.findAll();
-    }
-
-    // Method to get all projects
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
-    }
+// // Method to get all departments
+//    public List<Department> getAllDepartments() {
+//        return departmentRepository.findAll();
+//    }
+//
+//    // Method to get all projects
+//    public List<Project> getAllProjects() {
+//        return projectRepository.findAll();
+//    }
 
     // Method to find users by department and/or project
     public List<User> findUsersByDepartmentAndProject(Long departmentId, Long projectId) {

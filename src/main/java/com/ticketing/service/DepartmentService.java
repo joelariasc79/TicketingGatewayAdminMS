@@ -44,8 +44,8 @@ public class DepartmentService {
         return departmentRepository.findById(id);
     }
     
-    public List<Department> getAllDepartments() {
-        return departmentRepository.findAll();
-    }
+//    public List<Department> getAllDepartments() {
+//        return departmentRepository.findAll();
+//    }
     	
 }

@@ -20,7 +20,7 @@ public interface UserService {
     void delete(User user);
     void deleteById(Long id);
     User findByUserName(String userName);
-    List<Department> getAllDepartments();
-    List<Project> getAllProjects();
+//    List<Department> getAllDepartments();
+//    List<Project> getAllProjects();
     List<User> findUsersByDepartmentAndProject(Long departmentId, Long projectId);
 }

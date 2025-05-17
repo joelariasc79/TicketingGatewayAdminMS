@@ -43,8 +43,8 @@ public class ProjectService {
         return projectRepository.findById(id);
     }
     
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
-    }
+//    public List<Project> getAllProjects() {
+//        return projectRepository.findAll();
+//    }
     	
 }

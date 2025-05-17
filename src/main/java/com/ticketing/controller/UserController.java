@@ -35,7 +35,7 @@ import com.ticketing.domain.Department;
 import com.ticketing.domain.Project;
 import com.ticketing.domain.Role;
 import com.ticketing.domain.User;
-import com.ticketing.dto.NewUserDTO;
+import com.ticketing.dto.UserDTO;
 import com.ticketing.service.DepartmentService;
 import com.ticketing.service.ProjectService;
 import com.ticketing.service.RoleService;
@@ -88,6 +88,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
+    @GetMapping("/userName/{userName}")
+    public ResponseEntity<User> getUserByUserName(@PathVariable String userName, Model model) {
+        User user = userService.findByUserName(userName);
+        return ResponseEntity.ok(user);
+    }
+    
     @GetMapping("/list")
     public ResponseEntity<List<User>> listUsers() {
      List<User> users = userService.findAll();
@@ -130,9 +136,11 @@ public class UserController {
     
     @PostMapping("/save")
     @ResponseBody
-    public ResponseEntity<ApiResponse> saveUser(@RequestBody NewUserDTO userUpdateRequest) {
+    public ResponseEntity<ApiResponse> saveUser(@RequestBody UserDTO userUpdateRequest) {
         try {
             User user;
+//            System.out.println("userUpdateRequest.getId(): " + userUpdateRequest.getId());
+//            System.out.println("userUpdateRequest.getUserId(): " + userUpdateRequest.getId());
             if (userUpdateRequest.getId() != null) {
                 user = userService.findById(userUpdateRequest.getId()).orElseThrow(() -> new RuntimeException("User not found"));
                 user.setUserName(userUpdateRequest.getUserName());
