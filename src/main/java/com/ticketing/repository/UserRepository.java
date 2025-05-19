@@ -17,11 +17,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByDepartment_DepartmentId(Long departmentId);
     
     
- // Find users by project ID
+    // Find users by project ID
     List<User> findByProject_ProjectId(Long projectId);
     
     
- // Find users by both department ID and project ID
+    // Find users by both department ID and project ID
     List<User> findByDepartment_DepartmentIdAndProject_ProjectId(Long departmentId, Long projectId);
 
 

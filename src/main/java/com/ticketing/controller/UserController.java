@@ -89,11 +89,22 @@ public class UserController {
     }
     
     @GetMapping("/userName/{userName}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable String userName, Model model) {
+    public ResponseEntity<UserDTO> getUserByUserNameDto(@PathVariable String userName) {
         User user = userService.findByUserName(userName);
-        return ResponseEntity.ok(user);
+        if (user != null) {
+            UserDTO userDTO = new UserDTO(user.getUserId(), user.getUserName(), user.getEmail());
+            return ResponseEntity.ok(userDTO);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
     
+//    @GetMapping("/userName/{userName}")
+//    public ResponseEntity<User> getUserByUserName(@PathVariable String userName, Model model) {
+//        User user = userService.findByUserName(userName);
+//        return ResponseEntity.ok(user);
+//    }
+//    
     @GetMapping("/list")
     public ResponseEntity<List<User>> listUsers() {
      List<User> users = userService.findAll();
@@ -139,8 +150,6 @@ public class UserController {
     public ResponseEntity<ApiResponse> saveUser(@RequestBody UserDTO userUpdateRequest) {
         try {
             User user;
-//            System.out.println("userUpdateRequest.getId(): " + userUpdateRequest.getId());
-//            System.out.println("userUpdateRequest.getUserId(): " + userUpdateRequest.getId());
             if (userUpdateRequest.getId() != null) {
                 user = userService.findById(userUpdateRequest.getId()).orElseThrow(() -> new RuntimeException("User not found"));
                 user.setUserName(userUpdateRequest.getUserName());

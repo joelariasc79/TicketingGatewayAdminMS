@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ticketing.domain.Role;
+import com.ticketing.domain.User;
 import com.ticketing.repository.RoleRepository;
 
 @Service
@@ -47,6 +48,10 @@ public class RoleService {
     
     public Optional<Role> findById(Long id) {
         return roleRepository.findById(id);
+    }
+    
+    public List<Role> findByUser(User user) {
+        return roleRepository.findByUser(user);
     }
     	
 }

@@ -36,6 +36,13 @@ public class UserDTO {
 		this.roles = roles;
 	}
     
+    public UserDTO(Long id, String userName, String email) {
+		super();
+		this.id = id;
+		this.userName = userName;
+		this.email = email;
+	}
+    
  // Getters and Setters
 
 	public Long getId() {
