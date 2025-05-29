@@ -12,10 +12,4 @@ import java.util.Optional;
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByDepartmentName(String departmentName);
-   
-//    @Query("SELECT d FROM Department d LEFT JOIN FETCH d.users")
-//    List<Department> findAllWithUsers();
-//
-//    @Query("SELECT d FROM Department d")
-//    List<Department> findAll();
 }

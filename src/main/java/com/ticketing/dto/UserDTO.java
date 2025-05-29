@@ -117,7 +117,7 @@ public class UserDTO {
 
     @Override
     public String toString() {
-        return "NewRoleDTO{" +
+        return "RoleDTO{" +
                 "id=" + id +
                 ", userName='" + userName + '\'' +
                 ", email='" + email + '\'' +

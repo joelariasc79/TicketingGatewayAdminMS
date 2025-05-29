@@ -59,6 +59,7 @@ public class Department {
         IT,
         ADMINISTRATION,
         ENGINEERING,
-        ACCOUNTING
+        ACCOUNTING,
+        SYSTEM
     }
 }

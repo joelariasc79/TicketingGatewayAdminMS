@@ -1,12 +1,7 @@
 package com.ticketing.controller;
-import java.util.ArrayList;
-//
-//import java.security.Principal;
-import java.util.HashSet;
+
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-//import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,42 +9,32 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.ticketing.domain.Department;
-import com.ticketing.domain.Project;
 import com.ticketing.domain.Role;
 import com.ticketing.domain.User;
+
 import com.ticketing.dto.UserDTO;
 import com.ticketing.service.DepartmentService;
 import com.ticketing.service.ProjectService;
 import com.ticketing.service.RoleService;
 import com.ticketing.service.UserService;
-//
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 
 @Controller
 @RequestMapping("/api/admin/users")
 @SessionAttributes("user")
 public class UserController {
 
-    private final SecurityFilterChain apiFilterChain2;
 
     @Autowired
     private UserService userService;
@@ -62,30 +47,49 @@ public class UserController {
     
     @Autowired
     private ProjectService projectService;
-
-
-    UserController(SecurityFilterChain apiFilterChain2) {
-        this.apiFilterChain2 = apiFilterChain2;
-    }
-   
-    
-    @GetMapping()
-    public String usersList(Model model) {
-     model.addAttribute("formHeading", "Users Management");
-     model.addAttribute("userFormTitle", "Users Management");
-
-     List<User> users = userService.findAll();
-     model.addAttribute("users", users); // Add the users to the model
-
-     return "users";
-    }
     
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUser(@PathVariable Long userId, Model model) {
-        User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-     
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+        Optional<User> userOptional = userService.findById(userId);
+
+        if (!userOptional.isPresent()) {
+            // Return 404 Not Found if user is not found
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId);
+        }
+
+        User user = userOptional.get();
+
+        // Map the User entity to UserDTO
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getUserId()); // Use setId as per your DTO
+        userDTO.setUserName(user.getUserName());
+        userDTO.setEmail(user.getEmail());
+//        userDTO.setPassword(user.getUserPassword()); // Include password if your DTO needs it for the form
+
+        // Map Department ID
+        if (user.getDepartment() != null) {
+            userDTO.setDepartment(user.getDepartment().getDepartmentId());
+        }
+
+        // Map Project ID
+        if (user.getProject() != null) {
+            userDTO.setProject(user.getProject().getProjectId());
+        }
+
+        // Map Manager ID
+        if (user.getManager() != null) {
+            userDTO.setManager(user.getManager().getUserId());
+        }
+
+        // Map Roles (Set<Role> from entity to Set<Long> in DTO)
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            Set<Long> roleIds = user.getRoles().stream()
+                    .map(Role::getRoleId) // Get only the Role ID
+                    .collect(Collectors.toSet()); // Collect into a Set<Long>
+            userDTO.setRoles(roleIds);
+        }
+
+        return ResponseEntity.ok(userDTO); // Return 200 OK with the UserDTO
     }
     
     @GetMapping("/userName/{userName}")
@@ -99,52 +103,12 @@ public class UserController {
         }
     }
     
-//    @GetMapping("/userName/{userName}")
-//    public ResponseEntity<User> getUserByUserName(@PathVariable String userName, Model model) {
-//        User user = userService.findByUserName(userName);
-//        return ResponseEntity.ok(user);
-//    }
-//    
     @GetMapping("/list")
     public ResponseEntity<List<User>> listUsers() {
      List<User> users = userService.findAll();
      return ResponseEntity.ok(users);
     }
-    
-    @GetMapping("/test")
-    public String test(Model model) {
-        return "test"; // Returns the same Thymeleaf template for create
-    }
-    
-    @GetMapping("/create")
-    public String createForm(Model model) {
-        model.addAttribute("formHeading", "Create New User");
-        model.addAttribute("userFormTitle", "Create New User");
-        return "signup"; // Returns the same Thymeleaf template for create
-    }
-    
-    @GetMapping("/edit/{userId}")
-    public String editUserForm(@PathVariable Long userId, Model model) {
-        User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-        
-        List<Role> userRoles = new ArrayList<>(user.getRoles()); // Convert Set to List for easier JSON handling
-        
-        model.addAttribute("formHeading", "Edit User");
-        model.addAttribute("userFormTitle", "Edit User");
-        model.addAttribute("userId", user.getUserId());
-        model.addAttribute("userName", user.getUserName());
-        model.addAttribute("email", user.getEmail());
-        model.addAttribute("password", user.getUserPassword());        
-        model.addAttribute("selectedDepartmentId", user.getDepartment() != null ? user.getDepartment().getDepartmentId() : null);
-        model.addAttribute("selectedProjectId", user.getProject() != null ? user.getProject().getProjectId() : null);      
-        model.addAttribute("selectedManagerId", user.getManager() != null ? user.getManager().getUserId() : null);
-        
-        model.addAttribute("roles", userRoles);
-        return "signup"; // Returns the Thymeleaf template named "signup.html"
-    }
-    
-    
+   
     @PostMapping("/save")
     @ResponseBody
     public ResponseEntity<ApiResponse> saveUser(@RequestBody UserDTO userUpdateRequest) {
@@ -209,9 +173,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/delete/{id}")
-    public String deleteUser(@PathVariable Long id) {
-        userService.deleteById(id);
-        return "redirect:/admin/users";
+    @GetMapping("{userId}/delete")
+    public void deleteUser(@PathVariable Long userId) {
+        userService.deleteById(userId);
     }
 }

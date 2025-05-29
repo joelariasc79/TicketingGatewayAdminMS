@@ -19,13 +19,13 @@ import com.ticketing.dto.UserDTO;
 import com.ticketing.service.UserService;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Controller
-@RequestMapping("/api/admin/users/resetPassword")
+@RequestMapping("/api/v1/admin/users/resetPassword")
 @SessionAttributes("user")
 public class ResetPasswordController {
 
@@ -34,21 +34,20 @@ public class ResetPasswordController {
     
     private static final Logger logger = LoggerFactory.getLogger(ResetPasswordController.class);
     
-
-    @GetMapping("/find")
-    public String showFindUsersForm(Model model) {
-        model.addAttribute("departments", userService.findAll()); // Fetch all departments
-        model.addAttribute("projects", userService.findAll());       // Fetch all projects
-        return "findUser"; 
-    }
     
     @GetMapping("/filter")
-    public ResponseEntity<List<User>> findUsersByDepartmentAndProject( // Return ResponseEntity
+    public ResponseEntity<List<UserDTO>> findUsersByDepartmentAndProject(
             @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "projectId", required = false) Long projectId) {
 
         List<User> users = userService.findUsersByDepartmentAndProject(departmentId, projectId);
-        return ResponseEntity.ok(users); // Return the users with a 200 OK status
+
+        // Map User entities to UserDTOs
+        List<UserDTO> userDTOs = users.stream()
+                                      .map(user -> new UserDTO(user.getUserId(), user.getUserName(), user.getEmail()))
+                                      .collect(Collectors.toList());
+
+        return ResponseEntity.ok(userDTOs); // Return the DTOs with a 200 OK status
     }
     
     
