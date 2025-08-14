@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,6 +21,9 @@ import java.util.Date;
 import java.util.List;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+
+
+
 
 @Entity
 public class Ticket {
@@ -42,37 +47,39 @@ public class Ticket {
     @JsonBackReference("assignedTickets") // Add this, use a unique name
     private User assignee;
 
-    private String priority; // LOW, MEDIUM, HIGH
+    @Enumerated(EnumType.STRING)
+    private Priority priority; // LOW, MEDIUM, HIGH
 
-    private String status; // OPEN, PENDING_APPROVAL, APPROVED, REJECTED, ASSIGNED, RESOLVED, CLOSED, REOPENED
+    @Enumerated(EnumType.STRING)
+    private TicketStatus ticketStatus; // OPEN, PENDING_APPROVAL, APPROVED, REJECTED, ASSIGNED, RESOLVED, CLOSED, REOPENED
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date creationDate;
 
-    private String category;
-
-
+    private String category;    
+    
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("history")
-    private List<TicketHistory> history;
+    @JsonManagedReference("history") 
+    private List<TicketHistory> history; 
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("attachments")
     private List<Attachment> attachments; // Add this line
-
+    
     // Constructors
     public Ticket() {
     }
 
-    public Ticket(String title, String description, User createdBy, String priority, String status, Date creationDate, String category) {
+    public Ticket(String title, String description, User createdBy, Priority priority, TicketStatus ticketStatus, Date creationDate, String category) {
         this.title = title;
         this.description = description;
         this.createdBy = createdBy;
         this.priority = priority;
-        this.status = status;
+        this.ticketStatus = ticketStatus;
         this.creationDate = creationDate;
         this.category = category;
     }
+
 
     // Getters and Setters
     public Long getTicketId() {
@@ -115,20 +122,20 @@ public class Ticket {
         this.assignee = assignee;
     }
 
-    public String getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 
-    public String getStatus() {
-        return status;
+    public TicketStatus getTicketStatus() {
+        return ticketStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setTicketStatus(TicketStatus status) {
+        this.ticketStatus = status;
     }
 
     public Date getCreationDate() {
@@ -170,6 +177,10 @@ public class Ticket {
     @PrePersist
     protected void onCreate() {
         creationDate = new Date();
+        
+        if (this.ticketStatus == null) {
+            this.ticketStatus = TicketStatus.OPEN; // Set a default status
+        }
     }
 
     /**

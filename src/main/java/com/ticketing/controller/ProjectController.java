@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.ticketing.domain.Project;
-import com.ticketing.dto.ProjectDTO;
+import com.ticketing.dto.ProjectDto;
 import com.ticketing.service.ProjectService;
 
 @Controller
@@ -21,10 +21,10 @@ public class ProjectController {
     private ProjectService projectService;
     
     @GetMapping("/all")
-    public ResponseEntity<List<ProjectDTO>> getAllProjects() {
+    public ResponseEntity<List<ProjectDto>> getAllProjects() {
         List<Project> projects = projectService.findAll();
-        List<ProjectDTO> projectDTOs = projects.stream()
-                .map(project -> new ProjectDTO(project.getProjectId(), project.getProjectName()))
+        List<ProjectDto> projectDTOs = projects.stream()
+                .map(project -> new ProjectDto(project.getProjectId(), project.getProjectName()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(projectDTOs);
     }

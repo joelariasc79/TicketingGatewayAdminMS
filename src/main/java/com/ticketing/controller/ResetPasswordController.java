@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ticketing.domain.User;
-import com.ticketing.dto.UserDTO;
+import com.ticketing.dto.UserDto;
 import com.ticketing.service.UserService;
 
 import java.util.List;
@@ -36,15 +36,15 @@ public class ResetPasswordController {
     
     
     @GetMapping("/filter")
-    public ResponseEntity<List<UserDTO>> findUsersByDepartmentAndProject(
+    public ResponseEntity<List<UserDto>> findUsersByDepartmentAndProject(
             @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "projectId", required = false) Long projectId) {
 
         List<User> users = userService.findUsersByDepartmentAndProject(departmentId, projectId);
 
         // Map User entities to UserDTOs
-        List<UserDTO> userDTOs = users.stream()
-                                      .map(user -> new UserDTO(user.getUserId(), user.getUserName(), user.getEmail()))
+        List<UserDto> userDTOs = users.stream()
+                                      .map(user -> new UserDto(user.getUserId(), user.getUserName(), user.getEmail()))
                                       .collect(Collectors.toList());
 
         return ResponseEntity.ok(userDTOs); // Return the DTOs with a 200 OK status
@@ -64,7 +64,7 @@ public class ResetPasswordController {
     }
     
     @PostMapping("/save")
-    public String updatePassword(@ModelAttribute UserDTO userUpdateRequest, RedirectAttributes redirectAttributes) {
+    public String updatePassword(@ModelAttribute UserDto userUpdateRequest, RedirectAttributes redirectAttributes) {
         try {
             // Ensure the user ID is provided for updating
             if (userUpdateRequest.getUserId() == null) {

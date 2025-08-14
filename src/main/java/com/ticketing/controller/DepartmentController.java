@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.ticketing.domain.Department;
-import com.ticketing.dto.DepartmentDTO;
+import com.ticketing.dto.DepartmentDto;
 import com.ticketing.service.DepartmentService;
 
 @Controller
@@ -23,10 +23,10 @@ public class DepartmentController {
     private DepartmentService departmentService;  
     
     @GetMapping("/all")
-    public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {
+    public ResponseEntity<List<DepartmentDto>> getAllDepartments() {
         List<Department> departments = departmentService.findAll();
-        List<DepartmentDTO> departmentDTOs = departments.stream()
-                .map(department -> new DepartmentDTO(department.getDepartmentId(), department.getDepartmentName()))
+        List<DepartmentDto> departmentDTOs = departments.stream()
+                .map(department -> new DepartmentDto(department.getDepartmentId(), department.getDepartmentName()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(departmentDTOs);
     }

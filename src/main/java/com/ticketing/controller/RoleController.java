@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.ticketing.domain.Role;
 import com.ticketing.domain.User;
-import com.ticketing.dto.RoleDTO;
+import com.ticketing.dto.RoleDto;
 import com.ticketing.service.RoleService;
 import com.ticketing.service.UserService;
 
@@ -37,24 +37,24 @@ public class RoleController {
     
     
     @GetMapping("/all")
-    public ResponseEntity<List<RoleDTO>> getAllRoles() {
+    public ResponseEntity<List<RoleDto>> getAllRoles() {
         List<Role> roles = roleService.findAll();
-        List<RoleDTO> roleDTOs = roles.stream()
-                .map(role -> new RoleDTO(role.getRoleId(), role.getRoleName().toString())) // Convert RoleName to String
+        List<RoleDto> roleDTOs = roles.stream()
+                .map(role -> new RoleDto(role.getRoleId(), role.getRoleName().toString())) // Convert RoleName to String
                 .collect(Collectors.toList());
         return ResponseEntity.ok(roleDTOs);
     }
     
     
     @GetMapping("/{userId}")
-    public ResponseEntity<List<RoleDTO>> getAllRoles(@PathVariable Long userId) {
+    public ResponseEntity<List<RoleDto>> getAllRoles(@PathVariable Long userId) {
     	
     	User user = userService.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     	
         List<Role> roles = roleService.findByUser(user);
-        List<RoleDTO> roleDTOs = roles.stream()
-                .map(role -> new RoleDTO(role.getRoleId(), role.getRoleName().toString())) // Convert RoleName to String
+        List<RoleDto> roleDTOs = roles.stream()
+                .map(role -> new RoleDto(role.getRoleId(), role.getRoleName().toString())) // Convert RoleName to String
                 .collect(Collectors.toList());
         return ResponseEntity.ok(roleDTOs);
     }

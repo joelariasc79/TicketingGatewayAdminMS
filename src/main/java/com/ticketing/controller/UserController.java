@@ -12,18 +12,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.ticketing.domain.Role;
 import com.ticketing.domain.User;
-
-import com.ticketing.dto.UserDTO;
+import com.ticketing.dto.ApiResponse;
+import com.ticketing.dto.RoleDto;
+import com.ticketing.dto.UserDto;
 import com.ticketing.service.DepartmentService;
 import com.ticketing.service.ProjectService;
 import com.ticketing.service.RoleService;
@@ -49,7 +51,7 @@ public class UserController {
     private ProjectService projectService;
     
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long userId) {
         Optional<User> userOptional = userService.findById(userId);
 
         if (!userOptional.isPresent()) {
@@ -58,12 +60,15 @@ public class UserController {
         }
 
         User user = userOptional.get();
+        
+        System.out.println("user: " + user.getUserId());
 
         // Map the User entity to UserDTO
-        UserDTO userDTO = new UserDTO();
+        UserDto userDTO = new UserDto();
         userDTO.setId(user.getUserId()); // Use setId as per your DTO
         userDTO.setUserName(user.getUserName());
         userDTO.setEmail(user.getEmail());
+        userDTO.setEnabled(user.isEnabled());
 //        userDTO.setPassword(user.getUserPassword()); // Include password if your DTO needs it for the form
 
         // Map Department ID
@@ -83,20 +88,23 @@ public class UserController {
 
         // Map Roles (Set<Role> from entity to Set<Long> in DTO)
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            Set<Long> roleIds = user.getRoles().stream()
-                    .map(Role::getRoleId) // Get only the Role ID
-                    .collect(Collectors.toSet()); // Collect into a Set<Long>
-            userDTO.setRoles(roleIds);
+
+        	Set<RoleDto> roleDtos = user.getRoles().stream()
+        	          .map(role -> new RoleDto(role)) // Map each Role to a new RoleDto object
+        	          .collect(Collectors.toSet());
+          userDTO.setRoles(roleDtos);
+        	
         }
 
         return ResponseEntity.ok(userDTO); // Return 200 OK with the UserDTO
     }
     
     @GetMapping("/userName/{userName}")
-    public ResponseEntity<UserDTO> getUserByUserNameDto(@PathVariable String userName) {
+    public ResponseEntity<UserDto> getUserByUserNameDto(@PathVariable String userName) {
         User user = userService.findByUserName(userName);
         if (user != null) {
-            UserDTO userDTO = new UserDTO(user.getUserId(), user.getUserName(), user.getEmail());
+            UserDto userDTO = new UserDto(user.getUserId(), user.getUserName(), user.getEmail(), user.isEnabled());
+            
             return ResponseEntity.ok(userDTO);
         } else {
             return ResponseEntity.notFound().build();
@@ -104,21 +112,40 @@ public class UserController {
     }
     
     @GetMapping("/list")
-    public ResponseEntity<List<User>> listUsers() {
-     List<User> users = userService.findAll();
-     return ResponseEntity.ok(users);
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        try {
+            List<UserDto> userDtos = userService.findAll().stream()
+                                            .map(UserDto::new) // Convert each User entity to UserDto
+                                            .collect(Collectors.toList());
+            
+            
+            System.out.println("userDtos: " + userDtos);
+            return new ResponseEntity<>(userDtos, HttpStatus.OK);
+        } catch (Exception e) {
+            // Log the exception for debugging purposes
+            System.err.println("Error fetching all users: " + e.getMessage());
+            // Return an appropriate error response
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-   
+    
     @PostMapping("/save")
     @ResponseBody
-    public ResponseEntity<ApiResponse> saveUser(@RequestBody UserDTO userUpdateRequest) {
+    public ResponseEntity<ApiResponse> saveUser(@RequestBody UserDto userUpdateRequest) {
         try {
             User user;
             if (userUpdateRequest.getId() != null) {
-                user = userService.findById(userUpdateRequest.getId()).orElseThrow(() -> new RuntimeException("User not found"));
+                // Updating existing user
+                user = userService.findById(userUpdateRequest.getId())
+                                  .orElseThrow(() -> new RuntimeException("User not found"));
                 user.setUserName(userUpdateRequest.getUserName());
                 user.setEmail(userUpdateRequest.getEmail());
+                // When updating, 'enabled' status might be changed via specific enable/disable endpoints
+                // or explicitly in DTO if admin manages it.
+                // For this request, if updating, we ensure it remains enabled unless explicitly set otherwise.
+                // user.setEnabled(true); // You can uncomment this if you always want updates to default to enabled
             } else {
+                // Creating a new user
                 user = new User();
                 user.setUserName(userUpdateRequest.getUserName());
                 user.setEmail(userUpdateRequest.getEmail());
@@ -127,6 +154,7 @@ public class UserController {
                     return ResponseEntity.badRequest().body(new ApiResponse(false, "Password is required for new users."));
                 }
                 user.setUserPassword(new BCryptPasswordEncoder().encode(userUpdateRequest.getPassword()));
+                user.setEnabled(true); // NEW: Automatically enable new users
             }
 
             // Handle Manager
@@ -158,23 +186,43 @@ public class UserController {
             } else {
                 user.setProject(null); // Allow setting project to null
             }
+            
+            Set<RoleDto> roles = userUpdateRequest.getRoles().stream().collect(Collectors.toSet());
+            
 
-            // Handle Roles
-            Set<Role> roles = userUpdateRequest.getRoles().stream()
-                    .map(roleId -> roleService.findById(roleId)
-                            .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId)))
-                    .collect(Collectors.toSet());
-            user.setRoles(roles);
-
-            userService.save(user);
+            userService.save(user); // This will save the user with the enabled status set
             return ResponseEntity.ok(new ApiResponse(true, "User saved successfully."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(false, "Error saving user: " + e.getMessage()));
         }
     }
-
-    @GetMapping("{userId}/delete")
-    public void deleteUser(@PathVariable Long userId) {
-        userService.deleteById(userId);
+    
+    
+    @PutMapping("/{userId}/disable")
+    public ResponseEntity<UserDto> disableUser(@PathVariable Long userId) {
+        return userService.disableUser(userId)
+                .map(updatedUser -> new ResponseEntity<>(new UserDto(updatedUser), HttpStatus.OK)) // Convert User to UserDto
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+    
+    @PutMapping("/{userId}/enable")
+    public ResponseEntity<UserDto> enableUser(@PathVariable Long userId) {
+        return userService.enableUser(userId)
+                .map(updatedUser -> new ResponseEntity<>(new UserDto(updatedUser), HttpStatus.OK)) // Convert User to UserDto
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+    
+    @DeleteMapping("/{userId}") // Changed from @GetMapping to @DeleteMapping
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long userId) {
+        try {
+            // Optional: You might want to check if the user exists before attempting deletion
+            // if (userService.findById(userId).isEmpty()) {
+            //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(false, "User not found."));
+            // }
+            userService.deleteById(userId);
+            return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(false, "Error deleting user: " + e.getMessage()));
+        }
     }
 }

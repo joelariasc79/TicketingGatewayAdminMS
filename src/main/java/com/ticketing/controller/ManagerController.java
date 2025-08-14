@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.ticketing.domain.Role;
 import com.ticketing.domain.User;
-import com.ticketing.dto.UserDTO;
+import com.ticketing.dto.UserDto;
 import com.ticketing.service.UserService;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,12 +23,12 @@ public class ManagerController {
     private UserService userService;
 	
 	@GetMapping("/all")
-	public ResponseEntity<List<UserDTO>> getAllManagers() {
+	public ResponseEntity<List<UserDto>> getAllManagers() {
 	    List<User> managers = userService.findAll();
-	    List<UserDTO> managerDTOs = managers.stream()
+	    List<UserDto> managerDTOs = managers.stream()
 	            .filter(user -> user.getRoles().stream()
 	                    .anyMatch(role -> Role.RoleName.MANAGER.equals(role.getRoleName())))
-	            .map(user -> new UserDTO(user.getUserId(), user.getUserName()))
+	            .map(user -> new UserDto(user.getUserId(), user.getUserName()))
 	            .collect(Collectors.toList());
 	    return ResponseEntity.ok(managerDTOs);
 	}

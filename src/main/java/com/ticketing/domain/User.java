@@ -35,6 +35,9 @@ public class User {
 
     private String email;
 
+    // NEW FIELD: enabled status for the user
+    private boolean enabled; // Default value for boolean is 'false' if not explicitly set
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id", nullable = true)
     @JsonBackReference("managedUsers") // Use the same unique name
@@ -84,11 +87,13 @@ public class User {
     public User() {
     }
 
-    public User(Long userId, String userName, String userPassword, String email, Department department, Project project, User manager, Set<Role> roles) {
+    // Updated constructor to include the 'enabled' field
+    public User(Long userId, String userName, String userPassword, String email, boolean enabled, Department department, Project project, User manager, Set<Role> roles) {
         this.userId = userId;
         this.userName = userName;
         this.userPassword = userPassword;
         this.email = email;
+        this.enabled = enabled; // Initialize the new field
         this.department = department;
         this.project = project;
         this.manager = manager;
@@ -125,6 +130,16 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    // NEW: Getter for the 'enabled' field
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    // NEW: Setter for the 'enabled' field
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public User getManager() {

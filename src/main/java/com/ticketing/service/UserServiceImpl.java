@@ -39,6 +39,46 @@ public class UserServiceImpl implements UserService {
         System.out.println("Saving/Updating User: " + user.getUserName() + " in DB and refreshing caches.");
         return userRepository.save(user);
     }
+    
+    @Override
+    @Transactional
+    public Optional<User> enableUser(Long userId) {
+        System.out.println("Attempting to enable User with ID: " + userId); // For demonstration
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (!user.isEnabled()) { // Only enable if currently disabled
+                user.setEnabled(true);
+                // Call save() method, which has @CachePut and @Caching(evict=...)
+                // This ensures the single user cache is updated and list caches are cleared.
+                User updatedUser = save(user);
+                System.out.println("User " + userId + " enabled and cache updated/evicted.");
+                return Optional.of(updatedUser);
+            }
+        }
+        System.out.println("User " + userId + " not found or already enabled. No action taken.");
+        return Optional.empty();
+    }
+    
+    @Override
+    @Transactional
+    public Optional<User> disableUser(Long userId) {
+        System.out.println("Attempting to disable User with ID: " + userId); // For demonstration
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.isEnabled()) { // Only disable if currently enabled
+                user.setEnabled(false);
+                // Call save() method, which has @CachePut and @Caching(evict=...)
+                // This ensures the single user cache is updated and list caches are cleared.
+                User updatedUser = save(user);
+                System.out.println("User " + userId + " disabled and cache updated/evicted.");
+                return Optional.of(updatedUser);
+            }
+        }
+        System.out.println("User " + userId + " not found or already disabled. No action taken.");
+        return Optional.empty();
+    }
 
     /**
      * Finds a User by their ID.
@@ -48,11 +88,11 @@ public class UserServiceImpl implements UserService {
      * @return An Optional containing the User if found, otherwise empty.
      */
     @Override
-    @Cacheable(value = "users", key = "#id")
+    @Cacheable(value = "users", key = "#userId")
     @Transactional(readOnly = true)
-    public Optional<User> findById(Long id) {
-        System.out.println("Fetching User by ID: " + id + " from DB or Cache.");
-        return userRepository.findById(id);
+    public Optional<User> findById(Long userId) {
+        System.out.println("Fetching User by ID: " + userId + " from DB or Cache.");
+        return userRepository.findById(userId);
     }
 
     /**
@@ -67,23 +107,6 @@ public class UserServiceImpl implements UserService {
     public List<User> findAll() {
         System.out.println("Fetching all Users from DB or Cache.");
         return userRepository.findAll();
-    }
-
-    /**
-     * Deletes a User entity.
-     * Evicts the individual User from the "users" cache and all relevant list caches.
-     * Also evicts the "userDetails" cache.
-     *
-     * @param user The User entity to delete.
-     */
-    @Override
-    @Caching(evict = { // <--- Use @Caching with 'evict' attribute
-        @CacheEvict(value = {"users", "allUsers", "usersByDepartmentAndProject"}, allEntries = true), // Clear all list caches
-        @CacheEvict(value = "userDetails", key = "#user.userName") // Clear specific userDetails entry
-    })
-    public void delete(User user) {
-        System.out.println("Deleting User: " + user.getUserName() + " from DB and evicting caches.");
-        userRepository.delete(user);
     }
 
     /**
@@ -143,5 +166,52 @@ public class UserServiceImpl implements UserService {
         } else {
             return userRepository.findAll();
         }
+    } 
+    
+    /**
+     * Deletes a User entity.
+     * Evicts the individual User from the "users" cache and all relevant list caches.
+     * Also evicts the "userDetails" cache.
+     *
+     * @param user The User entity to delete.
+     */
+    @Override
+    @Caching(evict = { // <--- Use @Caching with 'evict' attribute
+        @CacheEvict(value = {"users", "allUsers", "usersByDepartmentAndProject"}, allEntries = true), // Clear all list caches
+        @CacheEvict(value = "userDetails", key = "#user.userName") // Clear specific userDetails entry
+    })
+    public void delete(User user) {
+        System.out.println("Deleting User: " + user.getUserName() + " from DB and evicting caches.");
+        userRepository.delete(user);
     }
+    
+    
+//    @CacheEvict(value = "users", key = "#userId") 
+//    @Transactional
+//    public Optional<User> enableUser(Long userId) {
+//        Optional<User> userOptional = userRepository.findById(userId);
+//        if (userOptional.isPresent()) {
+//            User user = userOptional.get();
+//            if (!user.isEnabled()) { // Only enable if currently disabled
+//                user.setEnabled(true);
+//                return Optional.of(userRepository.save(user));
+//            }
+//        }
+//        return Optional.empty();
+//    }
+//    
+//    @CacheEvict(value = "users", key = "#userId")
+//    @Transactional
+//    public Optional<User> disableUser(Long userId) {
+//        Optional<User> userOptional = userRepository.findById(userId);
+//        if (userOptional.isPresent()) {
+//            User user = userOptional.get();
+//            if (user.isEnabled()) { // Only disable if currently enabled
+//                user.setEnabled(false);
+//                return Optional.of(userRepository.save(user));
+//            }
+//        }
+//        return Optional.empty();
+//    }
+
 }

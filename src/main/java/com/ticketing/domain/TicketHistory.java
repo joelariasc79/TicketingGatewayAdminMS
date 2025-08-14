@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,14 +23,14 @@ public class TicketHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long ticketHistoryId;
-
-
+    
     @ManyToOne
     @JoinColumn(name = "ticket_id")
-    @JsonBackReference("history") // Add this, matching the @JsonManagedReference in Ticket
-    private Ticket ticket;
+    @JsonBackReference("history") 
+    private Ticket ticket; 
 
-    private String action; // CREATED, APPROVED, REJECTED, ASSIGNED, RESOLVED, CLOSED, REOPENED
+    @Enumerated(EnumType.STRING)
+    private Action action; // CREATED, APPROVED, REJECTED, ASSIGNED, RESOLVED, CLOSED, REOPENED
 
     @ManyToOne
     @JoinColumn(name = "action_by_employee_id")
@@ -44,7 +46,7 @@ public class TicketHistory {
     public TicketHistory() {
     }
 
-    public TicketHistory(Ticket ticket, String action, User actionBy, Date actionDate, String comments) {
+    public TicketHistory(Ticket ticket, Action action, User actionBy, Date actionDate, String comments) {
         this.ticket = ticket;
         this.action = action;
         this.actionBy = actionBy;
@@ -69,11 +71,11 @@ public class TicketHistory {
         this.ticket = ticket;
     }
 
-    public String getAction() {
+    public Action getAction() {
         return action;
     }
 
-    public void setAction(String action) {
+    public void setAction(Action action) {
         this.action = action;
     }
 

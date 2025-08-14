@@ -1,15 +1,15 @@
 package com.ticketing.dto;
 
 
-public class ProjectDTO {
+public class ProjectDto {
 
     private Long projectId;
     private String projectName;
 
-    public ProjectDTO() {
+    public ProjectDto() {
     }
 
-    public ProjectDTO(Long projectId, String projectName) {
+    public ProjectDto(Long projectId, String projectName) {
         this.projectId = projectId;
         this.projectName = projectName;
     }

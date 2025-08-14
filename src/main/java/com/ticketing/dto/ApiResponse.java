@@ -1,4 +1,4 @@
-package com.ticketing.controller;
+package com.ticketing.dto;
 
 public class ApiResponse {
     private boolean success;

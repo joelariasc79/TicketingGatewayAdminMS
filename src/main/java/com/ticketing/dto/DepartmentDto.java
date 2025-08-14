@@ -1,14 +1,14 @@
 package com.ticketing.dto;
 
-public class DepartmentDTO {
+public class DepartmentDto {
 
     private Long departmentId;
     private String departmentName;
 
-    public DepartmentDTO() {
+    public DepartmentDto() {
     }
 
-    public DepartmentDTO(Long departmentId, String departmentName) {
+    public DepartmentDto(Long departmentId, String departmentName) {
         this.departmentId = departmentId;
         this.departmentName = departmentName;
     }

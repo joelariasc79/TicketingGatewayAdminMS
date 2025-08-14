@@ -35,6 +35,10 @@ public interface UserService {
             "userDetails"                 // UserDetails object needs to be fresh for Spring Security
         }, allEntries = true) // Evict all entries from these list/detail caches
     User save(User user);
+    
+    
+    Optional<User> enableUser(Long userId);
+    Optional<User> disableUser(Long userId);
 
     /**
      * Finds a User by their ID.
@@ -43,10 +47,10 @@ public interface UserService {
      * @param id The ID of the user.
      * @return An Optional containing the User if found, otherwise empty.
      */
-    @Cacheable(value = "users", key = "#id")
+    @Cacheable(value = "users", key = "#userId")
     @Transactional(readOnly = true)
-    Optional<User> findById(Long id);
-
+    Optional<User> findById(Long userId);
+    
     /**
      * Retrieves all User entities.
      * Caches the entire list of users.
@@ -113,4 +117,13 @@ public interface UserService {
     @Cacheable(value = "usersByDepartmentAndProject", key = "#departmentId + '-' + #projectId")
     @Transactional(readOnly = true)
     List<User> findUsersByDepartmentAndProject(Long departmentId, Long projectId);
+    
+    
+//    @CacheEvict(value = "users", key = "#userId")
+//    @Transactional
+//    public Optional<User> enableUser(Long userId);
+    
+//    @CacheEvict(value = "users", key = "#userId")
+//    @Transactional
+//    public Optional<User> disableUser(Long userId);
 }
